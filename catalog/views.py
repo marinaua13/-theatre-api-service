@@ -56,6 +56,32 @@ class PlayViewSet(
     queryset = Play.objects.all()
     serializer_class = PlaySerializer
 
+    @staticmethod
+    def _params_to_ints(query_string):
+        """Converts a list of string IDs to a list of integers"""
+        return [int(str_id) for str_id in query_string.split(",")]
+
+    def get_queryset(self):
+        """Retrieve the movies with filters"""
+        title = self.request.query_params.get("title")
+        genres = self.request.query_params.get("genres")
+        actors = self.request.query_params.get("actors")
+
+        queryset = self.queryset
+
+        if title:
+            queryset = queryset.filter(title__icontains=title)
+
+        if genres:
+            genres_ids = self._params_to_ints(genres)
+            queryset = queryset.filter(genres__id__in=genres_ids)
+
+        if actors:
+            actors_ids = self._params_to_ints(actors)
+            queryset = queryset.filter(actors__id__in=actors_ids)
+
+        return queryset.distinct()
+
     def get_serializer_class(self):
         if self.action == "list":
             return PlayListSerializer
@@ -103,6 +129,12 @@ class PerformanceViewSet(viewsets.ModelViewSet):
         return PerformanceSerializer
 
 
+class ReservationSetPagination(PageNumberPagination):
+    page_size = 3
+    page_size_query_param = "page_size"
+    max_page_size = 20
+
+
 class ReservationViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
@@ -112,6 +144,7 @@ class ReservationViewSet(
         "tickets__movie_session__movie", "tickets__movie_session__cinema_hall"
     )
     serializer_class = ReservationSerializer
+    pagination_class = ReservationSetPagination
 
     def get_queryset(self):
         return Reservation.objects.filter(user=self.request.user)
