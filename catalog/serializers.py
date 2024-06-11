@@ -104,7 +104,7 @@ class TicketSerializer(serializers.ModelSerializer):
         Ticket.validate_ticket(
             attrs["row"],
             attrs["seat"],
-            attrs["movie_session"].cinema_hall,
+            attrs["performance"].theatre_hall,
             ValidationError,
         )
         return data
@@ -157,5 +157,5 @@ class ReservationSerializer(serializers.ModelSerializer):
         return reservation
 
 
-class PerformanceListSerializer(PerformanceSerializer):
+class ReservationListSerializer(ReservationSerializer):
     tickets = TicketListSerializer(many=True, read_only=True)
