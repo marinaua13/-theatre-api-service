@@ -138,15 +138,15 @@ REST_FRAMEWORK = {
         "rest_framework.throttling.AnonRateThrottle",
         "rest_framework.throttling.UserRateThrottle",
     ],
-    "DEFAULT_THROTTLE_RATES": {"anon": "10/day", "user": "30/day"},
+    "DEFAULT_THROTTLE_RATES": {"anon": "100/day", "user": "100/day"},
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
 }
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "Cinema Service API",
-    "DESCRIPTION": "Order cinema tickets",
+    "TITLE": "Theatre Service API",
+    "DESCRIPTION": "Order theatre tickets",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "SWAGGER_UI_SETTINGS": {
@@ -158,7 +158,7 @@ SPECTACULAR_SETTINGS = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "ROTATE_REFRESH_TOKENS": False,
 }
