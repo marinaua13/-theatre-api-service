@@ -66,7 +66,7 @@ class PlayDetailSerializer(PlaySerializer):
 class PlayImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Play
-        field = ("id", "image")
+        fields = ("id", "image")
 
 
 class PerformanceSerializer(serializers.ModelSerializer):
@@ -115,7 +115,16 @@ class TicketSerializer(serializers.ModelSerializer):
 
 
 class TicketListSerializer(serializers.ModelSerializer):
-    performance = PerformanceSerializer(many=True, read_only=True)
+    performance = PerformanceSerializer(many=False, read_only=True)
+
+    class Meta:
+        model = Ticket
+        fields = (
+            "id",
+            "row",
+            "seat",
+            "performance",
+        )
 
 
 class TicketSeatSerializer(TicketSerializer):
@@ -138,7 +147,7 @@ class PerformanceDetailSerializer(PerformanceSerializer):
 
 
 class ReservationSerializer(serializers.ModelSerializer):
-    tickets = TicketSerializer(many=True, read_only=True, allow_empty=False)
+    tickets = TicketSerializer(many=True, allow_empty=False)
 
     class Meta:
         model = Reservation
@@ -150,10 +159,13 @@ class ReservationSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        tickets_data = validated_data.pop("tickets")
+        tickets_data = validated_data.pop("tickets", None)
+        if tickets_data is None:
+            raise ValidationError("Tickets data is required")
+
         reservation = Reservation.objects.create(**validated_data)
         for ticket_data in tickets_data:
-            Ticket.objects.create(**ticket_data)
+            Ticket.objects.create(reservation=reservation, **ticket_data)
         return reservation
 
 
