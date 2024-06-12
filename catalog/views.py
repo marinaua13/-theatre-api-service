@@ -1,11 +1,15 @@
 from django.db.models import F, Count
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.pagination import PageNumberPagination
 
 from catalog.models import Genre, Actor, TheatreHall, Play, Performance, Reservation
+from catalog.permissions import IsAdminOrIfAuthenticatedReadOnly
 from catalog.serializers import (
     GenreSerializer,
     ActorSerializer,
@@ -25,6 +29,7 @@ from catalog.serializers import (
 class GenreViewSet(GenericViewSet, mixins.ListModelMixin, mixins.CreateModelMixin):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
 
 class ActorViewSet(
@@ -35,6 +40,7 @@ class ActorViewSet(
 ):
     queryset = Actor.objects.all()
     serializer_class = ActorSerializer
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
 
 class TheatreHallViewSet(
@@ -45,6 +51,7 @@ class TheatreHallViewSet(
 ):
     queryset = TheatreHall.objects.all()
     serializer_class = TheatreHallSerializer
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
 
 class PlayViewSet(
@@ -55,6 +62,7 @@ class PlayViewSet(
 ):
     queryset = Play.objects.all()
     serializer_class = PlaySerializer
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
     @staticmethod
     def _params_to_ints(query_string):
@@ -87,7 +95,7 @@ class PlayViewSet(
             return PlayListSerializer
         if self.action == "retrieve":
             return PlayDetailSerializer
-        if self.action == "image":
+        if self.action == "upload_image":
             return PlayImageSerializer
         return PlaySerializer
 
@@ -97,15 +105,34 @@ class PlayViewSet(
         url_path="upload-image",
     )
     def upload_image(self, request, pk=None):
-        """Endpoint for uploading image to specific movie"""
-        movie = self.get_object()
-        serializer = self.get_serializer(movie, data=request.data)
+        """Endpoint for uploading image to specific play"""
+        play = self.get_object()
+        serializer = self.get_serializer(play, data=request.data)
 
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "play",
+                type=OpenApiTypes.INT,
+                description="Filter by play id (ex. ?play=2)",
+            ),
+            OpenApiParameter(
+                "date",
+                type=OpenApiTypes.DATE,
+                description=(
+                    "Filter by datetime of Performance " "(ex. ?date=2022-10-23)"
+                ),
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
 class PerformanceViewSet(viewsets.ModelViewSet):
@@ -120,6 +147,7 @@ class PerformanceViewSet(viewsets.ModelViewSet):
         )
     )
     serializer_class = PerformanceSerializer
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -145,6 +173,7 @@ class ReservationViewSet(
     )
     serializer_class = ReservationSerializer
     pagination_class = ReservationSetPagination
+    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         return Reservation.objects.filter(user=self.request.user)
