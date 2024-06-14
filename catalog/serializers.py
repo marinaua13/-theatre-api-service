@@ -159,10 +159,7 @@ class ReservationSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        tickets_data = validated_data.pop("tickets", None)
-        if tickets_data is None:
-            raise ValidationError("Tickets data is required")
-
+        tickets_data = validated_data.pop("tickets")
         reservation = Reservation.objects.create(**validated_data)
         for ticket_data in tickets_data:
             Ticket.objects.create(reservation=reservation, **ticket_data)
