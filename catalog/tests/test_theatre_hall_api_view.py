@@ -6,7 +6,7 @@ from catalog.serializers import TheatreHallSerializer
 from django.contrib.auth import get_user_model
 
 
-THEATRE_HALL_URL = reverse('catalog:theatrehall-list')
+THEATRE_HALL_URL = reverse("catalog:theatrehall-list")
 
 
 class PublicTheatreHallApiTests(APITestCase):
@@ -14,19 +14,17 @@ class PublicTheatreHallApiTests(APITestCase):
         self.client = APIClient()
 
     def test_list_theatre_halls(self):
-        """Test retrieving a list of theatre halls"""
-        TheatreHall.objects.create(name='Main Hall', rows=10, seats_in_row=10)
-        TheatreHall.objects.create(name='Side Hall', rows=5, seats_in_row=5)
+        TheatreHall.objects.create(name="Main Hall", rows=10, seats_in_row=10)
+        TheatreHall.objects.create(name="Side Hall", rows=5, seats_in_row=5)
 
         res = self.client.get(THEATRE_HALL_URL)
 
-        TheatreHall.objects.all().order_by('name')
+        TheatreHall.objects.all().order_by("name")
 
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_create_theatre_hall_unauthorized(self):
-        """Test that unauthorized user cannot create a theatre hall"""
-        payload = {'name': 'Main Hall', 'rows': 10, 'seats_in_row': 10}
+        payload = {"name": "Main Hall", "rows": 10, "seats_in_row": 10}
         res = self.client.post(THEATRE_HALL_URL, payload)
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -35,26 +33,24 @@ class PrivateTheatreHallApiTests(APITestCase):
     def setUp(self):
         self.client = APIClient()
         self.user = get_user_model().objects.create_user(
-            'test@test.com',
-            'password123',
-            is_staff=True
+            "test@test.com", "password123", is_staff=True
         )
         self.client.force_authenticate(self.user)
 
     def test_create_theatre_hall(self):
-        """Test creating a theatre hall"""
-        payload = {'name': 'Main Hall', 'rows': 10, 'seats_in_row': 10}
+        payload = {"name": "Main Hall", "rows": 10, "seats_in_row": 10}
         res = self.client.post(THEATRE_HALL_URL, payload)
 
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
-        theatre_hall = TheatreHall.objects.get(id=res.data['id'])
+        theatre_hall = TheatreHall.objects.get(id=res.data["id"])
         for key in payload.keys():
             self.assertEqual(payload[key], getattr(theatre_hall, key))
 
     def test_retrieve_theatre_hall(self):
-        """Test retrieving a theatre hall by ID"""
-        theatre_hall = TheatreHall.objects.create(name='Main Hall', rows=10, seats_in_row=10)
-        url = reverse('catalog:theatrehall-detail', args=[theatre_hall.id])
+        theatre_hall = TheatreHall.objects.create(
+            name="Main Hall", rows=10, seats_in_row=10
+        )
+        url = reverse("catalog:theatrehall-detail", args=[theatre_hall.id])
         res = self.client.get(url)
 
         serializer = TheatreHallSerializer(theatre_hall)

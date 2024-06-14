@@ -259,7 +259,7 @@ class AdminPlayApiTest(TestCase):
         }
 
         res = self.client.post(PLAY_URL, payload)
-        print(res.data)  # For debugging
+        print(res.data)
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
 
         play = Play.objects.get(
@@ -281,7 +281,7 @@ class AdminPlayApiTest(TestCase):
             "genres": [genre.id],
         }
         res = self.client.post(PLAY_URL, payload)
-        print(res.data)  # For debugging
+        print(res.data)
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         self.assertIn(actor.id, res.data["actors"])
         self.assertIn(genre.id, res.data["genres"])

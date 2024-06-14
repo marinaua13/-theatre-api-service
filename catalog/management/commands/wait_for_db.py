@@ -19,9 +19,7 @@ class Command(BaseCommand):
                 db_conn = connections["default"].cursor()
             except OperationalError:
                 if verbosity > 0:
-                    self.stdout.write(
-                        "Database unavailable, waiting 1 second..."
-                    )
+                    self.stdout.write("Database unavailable, waiting 1 second...")
                 time.sleep(1)
                 attempt += 1
 
@@ -29,7 +27,5 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS("Database available!"))
         else:
             self.stdout.write(
-                self.style.ERROR(
-                    "Failed to connect to database after several attempts"
-                )
+                self.style.ERROR("Failed to connect to database after several attempts")
             )
