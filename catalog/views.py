@@ -60,7 +60,7 @@ class PlayViewSet(
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
 ):
-    queryset = Play.objects.all()
+    queryset = Play.objects.all().prefetch_related("actors", "genres")
     serializer_class = PlaySerializer
     permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
@@ -106,11 +106,9 @@ class PlayViewSet(
         play = self.get_object()
         serializer = self.get_serializer(play, data=request.data)
 
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @extend_schema(
         parameters=[
@@ -165,8 +163,8 @@ class ReservationViewSet(
     mixins.CreateModelMixin,
     GenericViewSet,
 ):
-    queryset = Reservation.objects.prefetch_related(
-        "tickets__movie_session__movie", "tickets__movie_session__cinema_hall"
+    queryset = Reservation.objects.select_related("user").prefetch_related(
+        "tickets__performance__play", "tickets__performance__theatre_hall"
     )
     serializer_class = ReservationSerializer
     pagination_class = ReservationSetPagination
